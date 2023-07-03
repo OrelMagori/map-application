@@ -1,30 +1,23 @@
-import React, { useState, createContext, useContext, useEffect } from "react";
-import {
-  View,
-  ActivityIndicator,
-  Keyboard,
-  KeyboardAvoidingView,
-} from "react-native";
-import { Entypo } from "@expo/vector-icons";
-import { onAuthStateChanged } from "firebase/auth";
+import { View, ActivityIndicator } from "react-native";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./config/firebase";
 
-import colors from "./colors";
-import Map from "./pages/Map";
-import Home from "./pages/Home";
-import Chat from "./pages/Chat";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import { auth } from "./config/firebase";
-// import { AuthStack } from "./components/AuthStack";
-// import { ChatStack } from './components/ChatStack';
+import Home from "./pages/Home";
+import Map from "./pages/Map";
 
+const Stack = createStackNavigator();
 const AuthenticatedUserContext = createContext({});
+
+/**
+ * For checking if we have a user or not
+ */
 const AuthenticatedUserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-
-  // this return is the value of the context provider
   return (
     <AuthenticatedUserContext.Provider value={{ user, setUser }}>
       {children}
@@ -32,138 +25,43 @@ const AuthenticatedUserProvider = ({ children }) => {
   );
 };
 
-const Tab = createBottomTabNavigator();
-// the function is the navigation for the app
-function ChatStack() {
+function HomeStack() {
   return (
-    <Tab.Navigator
-      defaultScreenOptions={Home}
-      tabBarOptions={{
-        keyboardHidesTabBar: true,
-      }}
+    <Stack.Navigator defaultScreenOptions={Home}
+    screenOptions={{ headerShown: false }}
     >
-      <Tab.Screen
-        name="Home"
-        component={Home}
-        options={{
-          tabBarLabel: "Home",
-          tabBarIcon: () => (
-            <Entypo name="home" size={25} color={colors.black} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Chat"
-        component={Chat}
-        options={{
-          tabBarLabel: "Chat",
-          tabBarIcon: () => (
-            <Entypo name="chat" size={25} color={colors.black} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Map"
-        component={Map}
-        options={{
-          tabBarLabel: "Map",
-          tabBarIcon: () => (
-            <Entypo name="map" size={25} color={colors.black} />
-          ),
-        }}
-      />
-    </Tab.Navigator>
+      <Stack.Screen name="Home" component={Home} />
+      <Stack.Screen name="Map" component={Map} />
+      {/* <Stack.Screen name="Logout" component={Login} /> */}
+    </Stack.Navigator>
   );
 }
 
-// the function is the navigation for the login and signup pages
 function AuthStack() {
-  const [keyboardShown, setKeyboardShown] = useState(false);
-
-  // the useEffect is hide the tab bar when the keyboard is shown.
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardDidShow",
-      () => {
-        setKeyboardShown(true);
-      }
-    );
-
-    const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardDidHide",
-      () => {
-        setKeyboardShown(false);
-      }
-    );
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
-
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
-      keyboardShouldPersistTaps="handled"
+    <Stack.Navigator
+      defaultScreenOptions={Login}
+      screenOptions={{ headerShown: false }}
     >
-      <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarHideOnKeyboard: true,
-          tabBarStyle: [
-            {
-              display: "flex",
-            },
-            null,
-          ],
-        }}
-      >
-        <Tab.Screen
-          name="Login"
-          component={Login}
-          options={{
-            tabBarLabel: "Login",
-            tabBarIcon: () => (
-              <Entypo name="login" size={25} color={colors.black} />
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="Signup"
-          component={Signup}
-          options={{
-            tabBarLabel: "Signup",
-            tabBarIcon: () => (
-              <Entypo name="add-user" size={25} color={colors.black} />
-            ),
-          }}
-        />
-      </Tab.Navigator>
-    </KeyboardAvoidingView>
+      <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name="Signup" component={Signup} />
+    </Stack.Navigator>
   );
 }
 
-// the function is the root navigation for the app
 function RootNavigator() {
   const { user, setUser } = useContext(AuthenticatedUserContext);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  // the function is the listener for the user authentication
   useEffect(() => {
-    // onAuthStateChanged returns an unsubscriber
-    const unsubscribeAuth = onAuthStateChanged(
-      auth,
-      async (authenticatedUser) => {
-        authenticatedUser ? setUser(authenticatedUser) : setUser(null);
-        setIsLoading(false);
-      }
-    );
-    // unsubscribe auth listener on unmount
-    return unsubscribeAuth;
+    const unsubscribe = onAuthStateChanged(auth, async (authenticatedUser) => {
+      authenticatedUser ? setUser(authenticatedUser) : setUser(null);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, [user]);
-  if (isLoading) {
+
+  if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
@@ -173,7 +71,7 @@ function RootNavigator() {
 
   return (
     <NavigationContainer>
-      {user ? <ChatStack /> : <AuthStack />}
+      {user ? <HomeStack /> : <AuthStack />}
     </NavigationContainer>
   );
 }

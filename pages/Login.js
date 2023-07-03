@@ -1,22 +1,26 @@
 import React, { useState } from "react";
 import {
+  StyleSheet,
   Text,
   View,
   TextInput,
+  Image,
   SafeAreaView,
   TouchableOpacity,
+  StatusBar,
   Alert,
+  NativeModules,
 } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
-
 import { auth } from "../config/firebase";
-import { styles } from "../pagesStyle/Login.style";
+
+const gpclose = require("../assets/gpclose.png");
+const { StatusBarManager } = NativeModules;
 
 export default function Login({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // this handleLogin function is used to login the user
   const handleLogin = () => {
     if (email !== "" && password !== "") {
       signInWithEmailAndPassword(auth, email, password)
@@ -28,6 +32,7 @@ export default function Login({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.whiteSheet} />
+      {/* <Image style={styles.backImage} source={gpclose} /> */}
       <SafeAreaView style={styles.form}>
         <Text style={styles.title}>Login</Text>
         <TextInput
@@ -65,12 +70,9 @@ export default function Login({ navigation }) {
           }}
         >
           <TouchableOpacity onPress={() => navigation.navigate("Signup")}>
-            <Text
-              style={{ color: "darkblue", fontWeight: "600", fontSize: 14 }}
-            >
-              {" "}
-              Sign Up
-            </Text>
+          <Text style={{ color: "darkblue", fontWeight: "600", fontSize: 14 }}>
+            {" "}Sign Up
+          </Text>
           </TouchableOpacity>
           <Text style={{ color: "gray", fontWeight: "600", fontSize: 14 }}>
             Don't have an account?
@@ -80,3 +82,55 @@ export default function Login({ navigation }) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0000",
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "darkblue",
+    alignSelf: "center",
+    paddingBottom: 24,
+  },
+  input: {
+    backgroundColor: "#ffff",
+    height: 58,
+    marginBottom: 20,
+    fontSize: 16,
+    borderRadius: 10,
+    padding: 12,
+    borderStartWidth: 1,
+  },
+
+  backImage: {
+    alignSelf: "center",
+    width: 230,
+    height: 100,
+    marginTop: 70,
+  },
+  whiteSheet: {
+    width: "100%",
+    height: "75%",
+    position: "absolute",
+    bottom: 0,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 60,
+  },
+  form: {
+    flex: 1,
+    justifyContent: "center",
+    marginHorizontal: 30,
+    // paddingTop: Platform.OS === "android" ? StatusBarManager.HEIGHT : 0,
+  },
+  button: {
+    backgroundColor: "darkblue",
+    height: 58,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 40,
+  },
+});

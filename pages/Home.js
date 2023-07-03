@@ -1,46 +1,96 @@
-import React, { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { Text, View, Image, ActivityIndicator } from "react-native";
+/**
+ * @abstract Our home app screen
+ */
 
-import { Signout } from "../components/Signout";
-import { styles } from "../pagesStyle/Home.style";
-import { auth, database } from "../config/firebase";
+import React, { useEffect, useState } from "react";
+import { View, TouchableOpacity, Text, Image, StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { FontAwesome } from "@expo/vector-icons";
+import { Entypo } from "@expo/vector-icons";
+import { getAuth, signOut } from "firebase/auth";
+
+const gpclose = require("../assets/gpclose.png");
 
 const Home = () => {
+  const navigation = useNavigation();
+
   const [userName, setuserName] = useState("");
-  const [userList, setUsersList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const gpclose = require("../assets/gpclose.png");
+
+  const auth = getAuth();
+  const handleLogout = () =>
+    signOut(auth)
+      .then(() => {
+        console.log("Sign-out successful");
+      })
+      .catch((error) => {
+        Alert.alert("Error in Home", error.message);
+      });
 
   useEffect(() => {
-    const getAllUsers = async () => {
-      const usersCollectionRef = collection(database, "users");
-      const data = await getDocs(usersCollectionRef);
-      setUsersList(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-      const getUser = userList.find((x) => x?.uid === auth.currentUser?.uid);
-      if (getUser) setuserName(getUser.firstName);
-      setIsLoading(false);
-    };
-    getAllUsers();
-  }, [userList]);
+    // navigation.setOptions({
+    //   headerLeft: () => (
+    //     <FontAwesome
+    //       name="search"
+    //       size={24}
+    //       style={{ marginLeft: 15 }}
+    //     />
+    //   ),
+    //   headerRight: () => (
+    //     <Text style={{ fontWeight: "bold", color: "#fff", fontSize: 18 }}>
+    //         Hello
+    //       </Text>
+    //   ),
+    // });
+    const email = auth.currentUser.email;
+    userNameTemp = email.substring(0, email.lastIndexOf("@"));
+    setuserName(userNameTemp);
+  }, [navigation]);
 
   return (
     <>
-      {!isLoading && userName ? (
-        <View style={styles.container}>
-          <Signout />
-          <View style={{ alignItems: "center" }}>
-            <Image style={styles.image} source={gpclose} />
-            <Text style={styles.headerHelloUser}>Hello {userName}.</Text>
-          </View>
-        </View>
-      ) : (
-        <View style={[styles.container, styles.horizontal]}>
-          <ActivityIndicator size="large" color="black" />
-        </View>
-      )}
+      <View style={styles.container}>
+      <Image style={styles.image} source={gpclose} />
+        <Text style={styles.headerHelloUser}>Hello {userName}.</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Map")}>
+          <Text style={styles.routerHomePage}> Map</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleLogout}>
+          <Text style={styles.routerHomePage}> Logout</Text>
+        </TouchableOpacity>
+      </View>
     </>
   );
 };
 
 export default Home;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    // justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ffff",
+  },
+  headerHelloUser: {
+    marginTop: 100,
+    justifyContent: "center",
+    alignItems: "center",
+    fontSize: 30,
+    fontWeight: "bold",
+    color: "black",
+    marginBottom: 20,
+  },
+  routerHomePage: {
+    marginTop: 10,
+    color: "darkblue",
+    fontWeight: "600",
+    fontSize: 24,
+  },
+  image: {
+    alignItems: "center",
+    // backgroundColor: "#ffff",
+    width: 230,
+    height: 100,
+    marginTop: 200,
+  },
+});

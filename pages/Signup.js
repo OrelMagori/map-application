@@ -1,68 +1,36 @@
 import React, { useState } from "react";
 import {
+  StyleSheet,
   Text,
   View,
   TextInput,
+  Image,
   SafeAreaView,
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { collection, addDoc } from "firebase/firestore";
-import { SelectList } from "react-native-dropdown-select-list";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 
-import { ages } from "../ages";
-import { auth, database } from "../config/firebase";
-import { styles } from "../pagesStyle/Signup.style";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../config/firebase";
+
+const gpclose = require("../assets/gpclose.png");
 
 export default function Signup({ navigation }) {
-  const [users] = useState([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [selected, setSelected] = useState("");
-  const [firstName, setFirstName] = useState("");
 
   const handleSignup = () => {
-    if (
-      email !== "" &&
-      password !== "" &&
-      firstName !== "" &&
-      lastName !== "" &&
-      selected !== ""
-    ) {
-      console.log(users);
-      if (selected < "18")
-        Alert.alert("Error in Signup", "You must be over 18 years old");
-      else {
-        createUserWithEmailAndPassword(auth, email, password)
-          .then(async (userCredential) => {
-            const user = userCredential.user;
-            const randomNumber = Math.floor(Math.random() * 1000) + 1;
-            const numberAvatar = randomNumber;
-            await addDoc(collection(database, "users"), {
-              uid: user?.uid,
-              email,
-              firstName,
-              lastName,
-              age: selected,
-              numberAvatar,
-            });
-            console.log("Signup successfully!");
-          })
-          .catch((err) => Alert.alert("Error in Signup", err.message));
-      }
-    } else {
-      Alert.alert("Error in Signup", "The fields must be filled");
+    if (email !== "" && password !== "") {
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(() => console.log("Signup successfully!"))
+        .catch((err) => Alert.alert("Error in Signup", err.message));
     }
-  };
-  const handleSubmit = () => {
-    handleSignup();
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.whiteSheet} />
+      {/* <Image style={styles.backImage} source={gpclose} /> */}
       <SafeAreaView style={styles.form}>
         <Text style={styles.title}>Sign Up</Text>
         <TextInput
@@ -85,26 +53,7 @@ export default function Signup({ navigation }) {
           value={password}
           onChangeText={(text) => setPassword(text)}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="First name"
-          value={firstName}
-          onChangeText={(text) => setFirstName(text)}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Last name"
-          value={lastName}
-          onChangeText={(text) => setLastName(text)}
-        />
-        <SelectList
-          placeholder="Select your age"
-          setSelected={(val) => setSelected(val)}
-          data={ages}
-          save="value"
-          // search={false}
-        />
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <TouchableOpacity style={styles.button} onPress={handleSignup}>
           <Text style={{ fontWeight: "bold", color: "#fff", fontSize: 18 }}>
             Sign Up
           </Text>
@@ -130,6 +79,57 @@ export default function Signup({ navigation }) {
           </Text>
         </View>
       </SafeAreaView>
-    </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0000",
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "darkblue",
+    alignSelf: "center",
+    paddingBottom: 24,
+  },
+  input: {
+    backgroundColor: "#ffff",
+    height: 58,
+    marginBottom: 20,
+    fontSize: 16,
+    borderRadius: 10,
+    padding: 12,
+    borderStartWidth: 1,
+  },
+
+  backImage: {
+    alignSelf: "center",
+    width: 230,
+    height: 100,
+    marginTop: 70,
+  },
+  whiteSheet: {
+    width: "100%",
+    height: "75%",
+    position: "absolute",
+    bottom: 0,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 60,
+  },
+  form: {
+    flex: 1,
+    justifyContent: "center",
+    marginHorizontal: 30,
+  },
+  button: {
+    backgroundColor: "darkblue",
+    height: 58,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 40,
+  },
+});
